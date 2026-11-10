@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en-IN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Download the DailyDairy app for Android</title>
+    <meta name="description" content="Download the DailyDairy app for Android: fresh milk and curd delivered every morning by your local dairy. Pause, skip or change any day before 9 pm." />
+    <meta name="theme-color" content="#1F5C3A" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="DailyDairy" />
+    <meta property="og:title" content="Download the DailyDairy app for Android" />
+    <meta property="og:description" content="Fresh milk and curd every morning from your local dairy." />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <style>
+      :root {
+        --forest: #1f5c3a;
+        --accent: #1f5c3a;
+        --accent-ink: #ffffff;
+        --ink: #17301f;
+        --muted: #5b6b60;
+        --line: #d6eadb;
+        --bg: #fbf7ec;
+        --card: #ffffff;
+        --error: #b91c1c;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --forest: #d6eadb;
+          --accent: #b7e34a;
+          --accent-ink: #0f3020;
+          --ink: #e8efe9;
+          --muted: #a3b3a8;
+          --line: #24402e;
+          --bg: #0d1f15;
+          --card: #132a1d;
+          --error: #f87171;
+        }
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        color: var(--ink);
+        background: var(--bg);
+        display: grid;
+        place-items: center;
+        padding: 24px 16px;
+      }
+      main {
+        width: 100%;
+        max-width: 460px;
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 20px;
+        padding: 32px 24px;
+        text-align: center;
+      }
+      img.logo { width: 76px; height: 76px; border-radius: 18px; }
+      h1 { margin: 18px 0 6px; font-size: 1.6rem; line-height: 1.2; color: var(--forest); }
+      p.lead { margin: 0 auto; max-width: 34ch; color: var(--muted); line-height: 1.5; }
+      button {
+        margin-top: 24px;
+        width: 100%;
+        padding: 16px;
+        border: 0;
+        border-radius: 12px;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font: inherit;
+        font-size: 1.05rem;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      button:disabled { opacity: 0.55; cursor: default; }
+      button:focus-visible { outline: 3px solid #b7e34a; outline-offset: 2px; }
+      .meta { margin: 10px 0 0; font-size: 0.85rem; color: var(--muted); min-height: 1.2em; }
+      .error { color: var(--error); }
+      ol {
+        margin: 28px 0 0;
+        padding: 20px 0 0 22px;
+        border-top: 1px solid var(--line);
+        text-align: left;
+        color: var(--ink);
+        line-height: 1.55;
+        font-size: 0.95rem;
+      }
+      ol li + li { margin-top: 8px; }
+      .note { margin: 20px 0 0; font-size: 0.85rem; color: var(--muted); line-height: 1.5; }
+      a { color: var(--forest); }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img class="logo" src="/favicon.svg" alt="DailyDairy" width="76" height="76" />
+      <h1>DailyDairy for Android</h1>
+      <p class="lead">Fresh milk and curd at your door every morning, from the dairy that serves your area.</p>
+
+      <button id="download" type="button" disabled>Checking for the latest app…</button>
+      <p class="meta" id="meta" role="status"></p>
+
+      <ol>
+        <li>Tap <strong>Download</strong> and open the file when it finishes.</li>
+        <li>If Android asks, allow <strong>Install unknown apps</strong> for your browser, then tap <strong>Install</strong>.</li>
+        <li>Open DailyDairy, sign in with your mobile number and add your address. Your PIN code shows which dairy delivers to you.</li>
+      </ol>
+      <p class="note">
+        Your phone may warn that this type of file can be harmful. That message appears for every app installed outside the Play Store. The app is from DailyDairy.
+        iPhone: a direct iPhone download isn't available yet.
+      </p>
+    </main>
+
+    <script>
+      const button = document.getElementById('download');
+      const meta = document.getElementById('meta');
+
+      const formatSize = (bytes) => (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+      const formatDate = (iso) =>
+        new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+      fetch('/api/latest')
+        .then((r) => r.json())
+        .then((info) => {
+          if (!info.available) {
+            button.textContent = 'App coming soon';
+            return;
+          }
+          button.textContent = 'Download for Android';
+          button.disabled = false;
+          meta.textContent = `${formatSize(info.size)} · updated ${formatDate(info.uploaded)}`;
+        })
+        .catch(() => {
+          button.textContent = 'Download for Android';
+          button.disabled = false;
+        });
+
+      button.addEventListener('click', async () => {
+        button.disabled = true;
+        meta.classList.remove('error');
+        try {
+          const res = await fetch('/api/link', { method: 'POST' });
+          const body = await res.json();
+          if (!res.ok) throw new Error(body.error || 'Could not start the download.');
+          window.location.href = body.url;
+          meta.textContent = 'Your download is starting. Check your notifications or Downloads folder.';
+        } catch (e) {
+          meta.textContent = e instanceof Error ? e.message : 'Could not start the download.';
+          meta.classList.add('error');
+        } finally {
+          setTimeout(() => (button.disabled = false), 4000);
+        }
+      });
+    </script>
+  </body>
+</html>

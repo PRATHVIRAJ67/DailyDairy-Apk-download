@@ -1,0 +1,18 @@
+{
+  "name": "dailydairy-download",
+  "private": true,
+  "version": "0.1.0",
+  "description": "DailyDairy Android app download page. The APK is stored in a private Cloudflare R2 bucket and handed out through short-lived signed links.",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "typecheck": "tsc -p tsconfig.json",
+    "deploy": "npm run typecheck && wrangler deploy",
+    "upload-apk": "wrangler r2 object put dailydairy-downloads/DailyDairy.apk --remote --content-type application/vnd.android.package-archive --file"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261023.1",
+    "typescript": "~5.9.3",
+    "wrangler": "^4.152.0"
+  }
+}
